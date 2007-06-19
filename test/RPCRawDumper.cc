@@ -162,7 +162,7 @@ void RPCRawDumper::analyze(const  edm::Event& ev, const edm::EventSetup& es)
           typedef DataRecord::RecordType Record;
           const Record* pRecord = reinterpret_cast<const Record* >(word+1)-iRecord;
           DataRecord data(*pRecord);
-          LogTrace("")<<"record: " <<data.print()<<" record type:"<<data.type();
+          LogTrace("")<<"record: " <<data.print()<<" hex: "<<hex<<*pRecord<<" record type:"<<data.type();
           event.add(data);
            if (event.complete()) {
   LogTrace(" ")<< "dccId: "<<fedId
