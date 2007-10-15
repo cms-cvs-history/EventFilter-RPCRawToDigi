@@ -1,0 +1,6 @@
+es_source RPCCabling = PoolDBESSource {
+   using CondDBSetup
+   string timetype = "runnumber"
+   string connect = "sqlite_fip:CondCore/SQLiteData/data/RPCEMap_030707.db"
+   VPSet toGet = {{ string record = "RPCEMapRcd" string tag = "RPCEMap_v1" }}
+}

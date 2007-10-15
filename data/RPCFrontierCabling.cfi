@@ -1,0 +1,6 @@
+es_source RPCCabling = PoolDBESSource {
+   using CondDBSetup
+   string connect = "frontier://FrontierDev/CMS_COND_RPC"
+   string timetype = "runnumber"
+   VPSet toGet = {{ string record = "RPCEMapRcd" string tag = "RPCEMap_v1" }}
+}
