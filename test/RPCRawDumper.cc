@@ -9,13 +9,11 @@
 #include <bitset>
 
 #include "FWCore/Framework/interface/EDAnalyzer.h"
-#include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/Exception.h"
 
 #include "DataFormats/Common/interface/Handle.h"
-#include "FWCore/Framework/interface/ESHandle.h"
 
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
@@ -28,7 +26,6 @@
 #include "DataFormats/FEDRawData/interface/FEDNumbering.h"
 
 #include "EventFilter/RPCRawToDigi/interface/RPCRecordFormatter.h"
-#include "DataFormats/RPCDigi/interface/RPCDigiCollection.h"
 //.#include "EventFilter/RPCRawToDigi/interface/EventRecords.h"
 //.#include "EventFilter/RPCRawToDigi/interface/LBRecord.h"
 
