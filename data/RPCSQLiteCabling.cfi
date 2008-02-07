@@ -1,3 +1,4 @@
+include "CondCore/DBCommon/data/CondDBSetup.cfi"
 es_source RPCCabling = PoolDBESSource {
    using CondDBSetup
    string timetype = "runnumber"
