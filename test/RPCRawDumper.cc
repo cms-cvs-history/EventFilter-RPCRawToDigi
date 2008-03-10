@@ -41,9 +41,9 @@ class RPCRawDumper : public edm::EDAnalyzer {
 public:
   
   explicit RPCRawDumper( const edm::ParameterSet& cfg) : theConfig(cfg) {}
-  virtual ~RPCRawDumper() { }
+  virtual ~RPCRawDumper();
 
-  virtual void beginJob( const edm::EventSetup& );
+  virtual void beginJob( const edm::EventSetup& ) {}
   virtual void endJob() {}
 
   /// get data, convert to digis attach againe to Event
@@ -53,7 +53,10 @@ private:
   edm::ParameterSet theConfig;
 };
 
-  void RPCRawDumper::beginJob( const edm::EventSetup& ) { }
+RPCRawDumper::~RPCRawDumper()
+{
+  LogTrace("") << "RPCRawDumper destructor";
+}
 
 void RPCRawDumper::analyze(const  edm::Event& ev, const edm::EventSetup& es) 
 {
@@ -137,23 +140,24 @@ void RPCRawDumper::analyze(const  edm::Event& ev, const edm::EventSetup& es)
         std::ostringstream str;
         str <<"record: "     <<data.print();
         str <<" hex: "       <<hex<<*pRecord;
-        str <<" record type:"<<data.type();
-        event.add(data);
-        str <<event.print(data.type());
+        str <<" type:"<<data.type();
+        str <<DataRecord::print(data);
         LogTrace("") << str.str();
+        event.add(data);
 
         if (event.complete()) {
           LogTrace(" ")
              << "dccId: "<<fedId
-             << " dccInputChannelNum: " <<event.tbRecord().rmb()
-             << " tbLinkInputNum: "<<event.tbRecord().tbLinkInputNumber()
-             << " lbNumInLink: "<<event.lbRecord().lbData().lbNumber()
-             << " partition "<<event.lbRecord().lbData().partitionNumber()
-             << " lbData "<<event.lbRecord().lbData().lbData();
+             << " dccInputChannelNum: " <<event.recordSLD().rmb()
+             << " tbLinkInputNum: "<<event.recordSLD().tbLinkInputNumber()
+             << " lbNumInLink: "<<event.recordCD().chamber()
+             << " partition "<<event.recordCD().partitionNumber()
+             << " cdData "<<event.recordCD().partitionData();
         }
       }
     }
   }
+  LogTrace("") << "End of Event";
 }
 
 
