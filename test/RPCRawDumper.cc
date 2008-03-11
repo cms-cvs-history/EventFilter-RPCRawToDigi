@@ -22,16 +22,14 @@
 
 #include "DataFormats/FEDRawData/interface/FEDHeader.h"
 #include "DataFormats/FEDRawData/interface/FEDTrailer.h"
-
 #include "DataFormats/FEDRawData/interface/FEDNumbering.h"
 
 #include "EventFilter/RPCRawToDigi/interface/RPCRecordFormatter.h"
-//.#include "EventFilter/RPCRawToDigi/interface/EventRecords.h"
-//.#include "EventFilter/RPCRawToDigi/interface/LBRecord.h"
 
 
-//.#include "TH1D.h"
-//.#include "TFile.h"
+#include "TH1D.h"
+#include "TFile.h"
+#include "TObjArray.h"
 
 typedef uint64_t Word64;
 using namespace rpcrawtodigi;
@@ -40,26 +38,65 @@ using namespace std;
 class RPCRawDumper : public edm::EDAnalyzer {
 public:
   
-  explicit RPCRawDumper( const edm::ParameterSet& cfg) : theConfig(cfg) {}
+  explicit RPCRawDumper( const edm::ParameterSet& cfg) : theConfig(cfg), nEvents(0) {}
   virtual ~RPCRawDumper();
 
-  virtual void beginJob( const edm::EventSetup& ) {}
-  virtual void endJob() {}
+  virtual void beginJob( const edm::EventSetup& );
+  virtual void endJob();
 
   /// get data, convert to digis attach againe to Event
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
 
 private:
   edm::ParameterSet theConfig;
+  TObjArray hList;
+  unsigned int nEvents;
 };
 
-RPCRawDumper::~RPCRawDumper()
+RPCRawDumper::~RPCRawDumper() { LogTrace("") << "RPCRawDumper destructor"; }
+
+void RPCRawDumper::beginJob( const edm::EventSetup& )
 {
-  LogTrace("") << "RPCRawDumper destructor";
+  hList.Add(new TH1D("hDcc790","hDcc790",9, 0.5,9.5));
+  hList.Add(new TH1D("hDcc791","hDcc791",9, 0.5,9.5));
+  hList.Add(new TH1D("hDcc792","hDcc792",9, 0.5,9.5));
+  hList.SetOwner();
 }
+
+void RPCRawDumper::endJob()
+{
+  std::ostringstream str;
+  
+  for (int ih=0; ih<3; ih++) {
+   string hname;
+   if (ih==0) hname="hDcc790";   
+   if (ih==1) hname="hDcc791";   
+   if (ih==2) hname="hDcc792";   
+   TH1* histo = static_cast<TH1*>(hList.FindObject(hname.c_str()));
+   histo->SetEntries(nEvents);
+   str<<hname<<" record count,";
+   str<<"  BX: "<<setw(9)<<histo->GetBinContent(1);
+   str<<"  SLD: "<<setw(9)<<histo->GetBinContent(2);
+   str<<"  CD: "<<setw(9)<<histo->GetBinContent(3);
+   str<<"  EMPTY: "<<setw(9)<<histo->GetBinContent(4);
+   str<<"  RDDM: "<<histo->GetBinContent(5);
+   str<<"  SDDM: "<<histo->GetBinContent(6);
+   str<<"  RCDM: "<<histo->GetBinContent(7);
+   str<<"  RDM: "<<histo->GetBinContent(8);
+   str<<" unknown: "<<histo->GetBinContent(9);
+   str<< std::endl;
+  }
+  edm::LogInfo("END OF JOB, HISTO DUMP")<<str.str();
+  TFile f("dccEvents.root","RECREATE");
+  hList.Write();
+  f.Close();
+  edm::LogInfo(" END JOB, histos saved!");
+}
+
 
 void RPCRawDumper::analyze(const  edm::Event& ev, const edm::EventSetup& es) 
 {
+  nEvents++;
   edm::Handle<FEDRawDataCollection> buffers;
   static std::string label = theConfig.getUntrackedParameter<std::string>("InputLabel","source");
   static std::string instance = theConfig.getUntrackedParameter<std::string>("InputInstance","");
@@ -82,6 +119,7 @@ void RPCRawDumper::analyze(const  edm::Event& ev, const edm::EventSetup& es)
     while (moreHeaders) {
       header++;
       FEDHeader fedHeader( reinterpret_cast<const unsigned char*>(header));
+      currentBX = fedHeader.bxID(); 
       if ( !fedHeader.check() ) break; // throw exception?
       if ( fedHeader.sourceID() != fedId) throw cms::Exception("PROBLEM with header!");
       moreHeaders = fedHeader.moreHeaders();
@@ -144,6 +182,14 @@ void RPCRawDumper::analyze(const  edm::Event& ev, const edm::EventSetup& es)
         str <<DataRecord::print(data);
         LogTrace("") << str.str();
         event.add(data);
+
+        //FILL debug histo
+        //if(event.triggerBx() == event.recordBX().bx()) 
+        {
+          std::ostringstream hname; hname<<"hDcc"<<fedId; 
+          TH1* histo = static_cast<TH1*>(hList.FindObject(hname.str().c_str()) );
+          histo->Fill(data.type());         
+       }
 
         if (event.complete()) {
           LogTrace(" ")
