@@ -196,7 +196,7 @@ void RPCRawDumper::analyze(const  edm::Event& ev, const edm::EventSetup& es)
              << "dccId: "<<fedId
              << " dccInputChannelNum: " <<event.recordSLD().rmb()
              << " tbLinkInputNum: "<<event.recordSLD().tbLinkInputNumber()
-             << " lbNumInLink: "<<event.recordCD().chamber()
+             << " lbNumInLink: "<<event.recordCD().lbInLink()
              << " partition "<<event.recordCD().partitionNumber()
              << " cdData "<<event.recordCD().partitionData();
         }
