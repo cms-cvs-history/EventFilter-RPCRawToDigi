@@ -34,6 +34,7 @@
 typedef uint64_t Word64;
 using namespace rpcrawtodigi;
 using namespace std;
+using namespace edm;
 
 class RPCRawDumper : public edm::EDAnalyzer {
 public:
@@ -119,9 +120,15 @@ void RPCRawDumper::analyze(const  edm::Event& ev, const edm::EventSetup& es)
     while (moreHeaders) {
       header++;
       FEDHeader fedHeader( reinterpret_cast<const unsigned char*>(header));
+      if (!fedHeader.check()) {
+        LogError(" ** PROBLEM **, header.check() failed, break");
+        break;
+      }
+      if ( fedHeader.sourceID() != fedId) {
+        LogError(" ** PROBLEM **, fedHeader.sourceID() != fedId")
+            << "fedId = " << fedId<<" sourceID="<<fedHeader.sourceID();
+      }
       currentBX = fedHeader.bxID(); 
-      if ( !fedHeader.check() ) break; // throw exception?
-      if ( fedHeader.sourceID() != fedId) throw cms::Exception("PROBLEM with header!");
       moreHeaders = fedHeader.moreHeaders();
       {
           std::ostringstream str;
@@ -144,8 +151,14 @@ void RPCRawDumper::analyze(const  edm::Event& ev, const edm::EventSetup& es)
     while (moreTrailers) {
       trailer--;
       FEDTrailer fedTrailer(reinterpret_cast<const unsigned char*>(trailer));
-      if ( !fedTrailer.check()) { trailer++; break; } // throw exception?
-      if ( fedTrailer.lenght()!= nWords) throw cms::Exception("PROBLEM with trailer!!");
+      if ( !fedTrailer.check()) {
+        LogError(" ** PROBLEM **, trailer.check() failed, break");
+        break;
+      }
+      if ( fedTrailer.lenght()!= nWords) {
+        LogError(" ** PROBLEM **, fedTrailer.lenght()!= nWords, break");
+        break;
+      }
       moreTrailers = fedTrailer.moreTrailers();
       {
         std::ostringstream str;
