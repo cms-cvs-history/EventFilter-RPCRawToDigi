@@ -1,7 +1,6 @@
 /** \class RPCRawDumper_H
- *  Plug-in module that dump raw data file 
- *  for pixel subdetector
- */
+ **  Plug-in module that dump raw data file 
+ **/
 
 #include <fstream>
 #include <iostream>
@@ -11,12 +10,11 @@
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "FWCore/Utilities/interface/Exception.h"
-
 #include "DataFormats/Common/interface/Handle.h"
 
-
+#include "FWCore/ParameterSet/interface/InputTag.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
+
 #include "DataFormats/FEDRawData/interface/FEDRawDataCollection.h"
 #include "DataFormats/FEDRawData/interface/FEDRawData.h"
 
@@ -99,9 +97,8 @@ void RPCRawDumper::analyze(const  edm::Event& ev, const edm::EventSetup& es)
 {
   nEvents++;
   edm::Handle<FEDRawDataCollection> buffers;
-  static std::string label = theConfig.getUntrackedParameter<std::string>("InputLabel","source");
-  static std::string instance = theConfig.getUntrackedParameter<std::string>("InputInstance","");
-  ev.getByLabel( label, instance, buffers);
+  static edm::InputTag label = theConfig.getParameter<edm::InputTag>("InputLabel");
+  ev.getByLabel( label, buffers);
 
   FEDNumbering fednum;
   std::pair<int,int> fedIds = fednum.getRPCFEDIds();
