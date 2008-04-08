@@ -37,7 +37,7 @@ using namespace edm;
 class RPCRawDumper : public edm::EDAnalyzer {
 public:
   
-  explicit RPCRawDumper( const edm::ParameterSet& cfg) : theConfig(cfg), nEvents(0) {}
+  explicit RPCRawDumper( const edm::ParameterSet& cfg) : theConfig(cfg), nEvents(0), nProblems(0) {}
   virtual ~RPCRawDumper();
 
   virtual void beginJob( const edm::EventSetup& );
@@ -50,6 +50,7 @@ private:
   edm::ParameterSet theConfig;
   TObjArray hList;
   unsigned int nEvents;
+  unsigned int nProblems;
 };
 
 RPCRawDumper::~RPCRawDumper() { LogTrace("") << "RPCRawDumper destructor"; }
@@ -85,6 +86,7 @@ void RPCRawDumper::endJob()
    str<<" unknown: "<<histo->GetBinContent(9);
    str<< std::endl;
   }
+  str <<" OTHER PROBLEMS: " << nProblems << std::endl;
   edm::LogInfo("END OF JOB, HISTO DUMP")<<str.str();
   TFile f("dccEvents.root","RECREATE");
   hList.Write();
@@ -119,9 +121,11 @@ void RPCRawDumper::analyze(const  edm::Event& ev, const edm::EventSetup& es)
       FEDHeader fedHeader( reinterpret_cast<const unsigned char*>(header));
       if (!fedHeader.check()) {
         LogError(" ** PROBLEM **, header.check() failed, break");
+        nProblems++;
         break;
       }
       if ( fedHeader.sourceID() != fedId) {
+        nProblems++;
         LogError(" ** PROBLEM **, fedHeader.sourceID() != fedId")
             << "fedId = " << fedId<<" sourceID="<<fedHeader.sourceID();
       }
@@ -150,10 +154,12 @@ void RPCRawDumper::analyze(const  edm::Event& ev, const edm::EventSetup& es)
       FEDTrailer fedTrailer(reinterpret_cast<const unsigned char*>(trailer));
       if ( !fedTrailer.check()) {
         LogError(" ** PROBLEM **, trailer.check() failed, break");
+        nProblems++;
         break;
       }
       if ( fedTrailer.lenght()!= nWords) {
         LogError(" ** PROBLEM **, fedTrailer.lenght()!= nWords, break");
+        nProblems++;
         break;
       }
       moreTrailers = fedTrailer.moreTrailers();
@@ -193,13 +199,24 @@ void RPCRawDumper::analyze(const  edm::Event& ev, const edm::EventSetup& es)
         LogTrace("") << str.str();
         event.add(data);
 
+        // check BX consistency
+        if (data.type() == 1) {
+          int nOrbits = 3564;
+          int diffOrbits = event.triggerBx()-event.recordBX().bx();
+          while (diffOrbits >  nOrbits/2) diffOrbits -=nOrbits; 
+          while (diffOrbits < -nOrbits/2) diffOrbits +=nOrbits; 
+          if( abs(diffOrbits) > 2) {
+            LogError(" ** PROBLEM **, wrong BXes");
+            nProblems++;
+          }
+        } 
+
         //FILL debug histo
-        //if(event.triggerBx() == event.recordBX().bx()) 
         {
           std::ostringstream hname; hname<<"hDcc"<<fedId; 
           TH1* histo = static_cast<TH1*>(hList.FindObject(hname.str().c_str()) );
           histo->Fill(data.type());         
-       }
+        }
 
         if (event.complete()) {
           LogTrace(" ")
