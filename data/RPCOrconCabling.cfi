@@ -1,7 +1,7 @@
 include "CondCore/DBCommon/data/CondDBSetup.cfi"
 es_source RPCCabling = PoolDBESSource {
   using CondDBSetup
-  string connect = "oracle://orcon/CMS_COND_ON_200_RPC"
+  string connect = "oracle://cms_orcon_prod/CMS_COND_20X_RPC"
   VPSet toGet = {{ string record = "RPCEMapRcd" string tag = "RPCEMap_v2" }}
 }
 
