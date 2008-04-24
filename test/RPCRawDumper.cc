@@ -51,6 +51,8 @@ private:
   TObjArray hList;
   unsigned int nEvents;
   unsigned int nProblems;
+  typedef std::map<std::pair<int,int>,std::vector<int> > BXCountMap;
+  BXCountMap bxCounts; 
 };
 
 RPCRawDumper::~RPCRawDumper() { LogTrace("") << "RPCRawDumper destructor"; }
@@ -61,6 +63,11 @@ void RPCRawDumper::beginJob( const edm::EventSetup& )
   hList.Add(new TH1D("hDcc791","hDcc791",9, 0.5,9.5));
   hList.Add(new TH1D("hDcc792","hDcc792",9, 0.5,9.5));
   hList.SetOwner();
+
+
+  for (int dcc=790; dcc<=792; dcc++) {
+    for (int rmb=0; rmb <=35; rmb++)  bxCounts[make_pair(dcc,rmb)]=vector<int>(8,0);
+  }
 }
 
 void RPCRawDumper::endJob()
@@ -87,10 +94,19 @@ void RPCRawDumper::endJob()
    str<< std::endl;
   }
   str <<" OTHER PROBLEMS: " << nProblems << std::endl;
-  edm::LogInfo("END OF JOB, HISTO DUMP")<<str.str();
   TFile f("dccEvents.root","RECREATE");
   hList.Write();
   f.Close();
+  for (BXCountMap::const_iterator im=bxCounts.begin(); im!= bxCounts.end(); ++im) {
+    int totCount=0;
+    for (unsigned int i=0; i<im->second.size(); i++) totCount +=  im->second[i];
+    if (totCount>0) {
+      str<<"dcc="<<setw(3)<<im->first.first<<" rmb="<<setw(3)<<im->first.second<<" counts: ";
+      for (unsigned int i=0; i<im->second.size(); i++) str<<" "<<setw(6)<<im->second[i];
+      str<<endl;
+    }
+  }
+  edm::LogInfo("END OF JOB, HISTO DUMP")<<str.str();
   edm::LogInfo(" END JOB, histos saved!");
 }
 
@@ -226,6 +242,18 @@ void RPCRawDumper::analyze(const  edm::Event& ev, const edm::EventSetup& es)
              << " lbNumInLink: "<<event.recordCD().lbInLink()
              << " partition "<<event.recordCD().partitionNumber()
              << " cdData "<<event.recordCD().partitionData();
+        }
+        if (event.complete()) {
+         pair<int,int> key = make_pair(fedId, event.recordSLD().rmb());
+          if( bxCounts.find(key) == bxCounts.end()) continue;
+          vector<int> & v = bxCounts[key];
+          int nOrbits = 3564;
+          int bxDiff = event.recordBX().bx() - event.triggerBx() + 3;
+          if (bxDiff >  nOrbits/2) bxDiff -=nOrbits;
+          if (bxDiff < -nOrbits/2) bxDiff +=nOrbits;
+          if (bxDiff < 0) continue;
+          if (bxDiff >= static_cast<int>(v.size()) ) continue;
+          v[bxDiff]++;
         }
       }
     }
