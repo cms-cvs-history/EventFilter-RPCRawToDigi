@@ -10,3 +10,10 @@
 <library file=RPCRawDumper.cc name=RPCRawDumper>
   <flags EDM_PLUGIN=1>
 </library>
+<library file=RPCRawSynchro.cc name=RPCRawSynchro>
+  <flags EDM_PLUGIN=1>
+</library>
+<library file=RPCRawAnalyser.cc name=RPCRawAnalyser>
+  <flags EDM_PLUGIN=1>
+</library>
+
