@@ -74,7 +74,7 @@ void RPCRawAnalyser::endJob()
 {
   TFile f("analysis.root","RECREATE");
 
-  TH1F h1 = theCounts.recordTypeHisto(790);
+/*  TH1F h1 = theCounts.recordTypeHisto(790);
   TH1F h2 = theCounts.recordTypeHisto(791);
   TH1F h3 = theCounts.recordTypeHisto(792);
   h1.Write();
@@ -82,6 +82,7 @@ void RPCRawAnalyser::endJob()
   h3.Write();
   TH1F e = theCounts.readoutErrorHisto();
   e.Write();
+*/
 
   
   TH1D hBX("hBX","hBX",8,-3.5,4.5);
