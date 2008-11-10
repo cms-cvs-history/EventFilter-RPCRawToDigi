@@ -33,6 +33,7 @@
 #include "CondFormats/DataRecord/interface/RPCEMapRcd.h"
 
 
+#include "TH1F.h"
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TFile.h"
@@ -73,13 +74,13 @@ void RPCRawAnalyser::endJob()
 {
   TFile f("analysis.root","RECREATE");
 
-  TH1D h1 = theCounts.recordTypeHisto(790);
-  TH1D h2 = theCounts.recordTypeHisto(791);
-  TH1D h3 = theCounts.recordTypeHisto(792);
+  TH1F h1 = theCounts.recordTypeHisto(790);
+  TH1F h2 = theCounts.recordTypeHisto(791);
+  TH1F h3 = theCounts.recordTypeHisto(792);
   h1.Write();
   h2.Write();
   h3.Write();
-  TH1D e = theCounts.readoutErrorHisto();
+  TH1F e = theCounts.readoutErrorHisto();
   e.Write();
 
   
